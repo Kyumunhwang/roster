@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>자퇴/휴학생 추가 - 등대학교</title>
+    <style>
+        :root { --primary: #4a90e2; --bg: #f4f7f9; }
+        body { font-family: system-ui; background: var(--bg); padding: 40px; display: flex; justify-content: center; }
+        .form-card { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 400px; }
+        h2 { margin-top: 0; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #666; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #357abd; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #888; text-decoration: none; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="form-card">
+    <h2>새 학생 추가</h2>
+    <form id="studentForm">
+        <div class="form-group">
+            <label>이름 (Name)</label>
+            <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+            <label>구분 (자퇴/휴학)</label>
+            <select id="status_type">
+                <option value="자퇴">자퇴</option>
+                <option value="휴학">휴학</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>성별 (Gender)</label>
+            <select id="gender">
+                <option value="M">남성 (M)</option>
+                <option value="F">여성 (F)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>학년 (Grade)</label>
+            <input type="number" id="grade" min="1" max="12" value="10">
+        </div>
+        <div class="form-group">
+            <label>사유 (Reason)</label>
+            <textarea id="status_reason" rows="3"></textarea>
+        </div>
+        <button type="submit">데이터 저장</button>
+    </form>
+    <a href="index.html" class="back-link">대시보드로 돌아가기</a>
+</div>
+
+<script>
+    document.getElementById('studentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const studentData = {
+            name: document.getElementById('name').value,
+            status_type: document.getElementById('status_type').value,
+            gender: document.getElementById('gender').value,
+            grade: parseInt(document.getElementById('grade').value),
+            status_reason: document.getElementById('status_reason').value,
+            dob: new Date().toISOString().split('T')[0] // 임시 날짜
+        };
+
+        try {
+            const response = await fetch('/api/roster', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(studentData)
+            });
+
+            if (response.ok) {
+                alert('학생 정보가 성공적으로 저장되었습니다!');
+                window.location.href = 'index.html';
+            } else {
+                alert('저장 실패!');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('서버 오류 발생!');
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>데이터 관리/삭제 - 등대학교</title>
+    <style>
+        :root { --primary: #4a90e2; --danger: #ff4d4f; --bg: #f4f7f9; }
+        body { font-family: system-ui; background: var(--bg); padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; color: #333; }
+        .search-box { margin-bottom: 20px; width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        .btn-delete:hover { background: #d9363e; }
+        .back-link { display: inline-block; margin-top: 20px; color: var(--primary); text-decoration: none; font-weight: bold; }
+        .status-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .tag-자퇴 { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+        .tag-휴학 { background: #e6f7ff; color: #096dd9; border: 1px solid #91d5ff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>학생 데이터 관리</h2>
+    <p>삭제하고 싶은 학생의 [삭제] 버튼을 누르세요. 상단 검색창에서 이름을 검색할 수 있습니다.</p>
+    
+    <input type="text" id="searchInput" class="search-box" placeholder="이름으로 검색..." onkeyup="filterTable()">
+
+    <table id="manageTable">
+        <thead>
+            <tr>
+                <th>이름</th>
+                <th>구분</th>
+                <th>성별</th>
+                <th>학년</th>
+                <th>작업</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- JS에서 채워짐 -->
+        </tbody>
+    </table>
+    
+    <a href="index.html" class="back-link">← 대시보드로 돌아가기</a>
+</div>
+
+<script>
+    let allData = [];
+
+    async function loadData() {
+        const response = await fetch('/api/roster');
+        allData = await response.json();
+        renderTable(allData);
+    }
+
+    function renderTable(data) {
+        const tbody = document.querySelector('#manageTable tbody');
+        tbody.innerHTML = '';
+        
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td><span class="status-tag tag-${item.status_type}">${item.status_type}</span></td>
+                <td>${item.gender}</td>
+                <td>${item.grade}</td>
+                <td><button class="btn-delete" onclick="deleteStudent('${item.name}')">삭제</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function filterTable() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allData.filter(item => item.name.toLowerCase().includes(query));
+        renderTable(filtered);
+    }
+
+    async function deleteStudent(name) {
+        if (!confirm(`정말로 '${name}' 학생의 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+
+        try {
+            const response = await fetch(`/api/roster/${encodeURIComponent(name)}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert('성공적으로 삭제되었습니다.');
+                loadData(); // 리스트 새로고침
+            } else {
+                alert('삭제 실패!');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('서버 오류 발생!');
+        }
+    }
+
+    window.onload = loadData;
+</script>
+
+</body>
+</html>
